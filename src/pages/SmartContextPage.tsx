@@ -1,13 +1,32 @@
-import { useState } from 'react';
-import { Brain, TrendingUp, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Users } from 'lucide-react';
+import { getClients } from '../services/clients';
+import type { Client } from '../types/clients';
 import { RiskBadge } from '../components/agents';
 import { MOCK_STRATEGIC_ANALYSIS } from '../services/api';
 import type { StrategicAnalysis, AnalysisType } from '../types/agents';
 
 export default function SmartContextPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [analysis, setAnalysis] = useState<StrategicAnalysis | null>(MOCK_STRATEGIC_ANALYSIS);
   const [selectedType, setSelectedType] = useState<AnalysisType>('deadline_risk');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  const loadClients = async () => {
+    setIsLoading(true);
+    const data = await getClients();
+    setClients(data);
+    if (data.length > 0) {
+      setSelectedClientId(data[0].id);
+    }
+    setIsLoading(false);
+  };
 
   const analysisTypes: { value: AnalysisType; label: string; description: string }[] = [
     {
@@ -48,6 +67,32 @@ export default function SmartContextPage() {
           <p className="text-gray-600">
             Análisis estratégico inteligente con recomendaciones accionables
           </p>
+        </div>
+        {/* Client Selector */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-green-600" />
+            Seleccionar Cliente
+          </h2>
+          {isLoading ?  (
+            <p className="text-gray-500">Cargando clientes...</p>
+          ) : clients.length === 0 ? (
+            <p className="text-gray-500">
+              No hay clientes. Ve a la página de Clientes para agregar uno.
+            </p>
+          ) : (
+            <select
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-lg"
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name} {client.company ? `- ${client.company}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Analysis Type Selection */}
