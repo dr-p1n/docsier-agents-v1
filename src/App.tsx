@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Calendar, FileText, Brain, Home } from 'lucide-react';
+import { Calendar, FileText, Brain, Home, Settings } from 'lucide-react';
 import SecretariaPage from './pages/SecretariaPage';
 import ArchivistaPage from './pages/ArchivistaPage';
 import SmartContextPage from './pages/SmartContextPage';
+import SettingsPage from './pages/SettingsPage';
 
 function HomePage() {
   return (
@@ -102,6 +103,13 @@ function App() {
                   <Brain className="w-5 h-5" />
                   SmartContext
                 </Link>
+                <Link
+                  to="/settings"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <Settings className="w-5 h-5" />
+                  Clientes
+                </Link>
               </div>
             </div>
           </div>
@@ -113,6 +121,7 @@ function App() {
           <Route path="/secretaria" element={<SecretariaPage />} />
           <Route path="/archivista" element={<ArchivistaPage />} />
           <Route path="/smartcontext" element={<SmartContextPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </div>
     </Router>
