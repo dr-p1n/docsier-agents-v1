@@ -1,25 +1,43 @@
-import { useState } from 'react';
-import { Calendar, AlertCircle, TrendingUp } from 'lucide-react';
-import { DeadlineCard, RiskBadge } from '../components/agents';
+import { useState, useEffect } from 'react';
+import { Calendar, TrendingUp, Users } from 'lucide-react';
+import { DeadlineCard } from '../components/agents';
 import { MOCK_DEADLINES, MOCK_DEADLINE_STATS } from '../services/api';
+import { getClients } from '../services/clients';
 import type { DeadlineExtractionResult } from '../types/agents';
+import type { Client } from '../types/clients';
 
 export default function SecretariaPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [deadlines, setDeadlines] = useState<DeadlineExtractionResult>(MOCK_DEADLINES);
-  const [isExtracting, setIsExtracting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const stats = MOCK_DEADLINE_STATS;
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target. files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    loadClients();
+  }, []);
 
-    setIsExtracting(true);
-    // Simulate API call - replace with real API call later
-    setTimeout(() => {
-      setIsExtracting(false);
-      setDeadlines(MOCK_DEADLINES);
-    }, 2000);
+  useEffect(() => {
+    if (selectedClientId) {
+      loadDeadlines(selectedClientId);
+    }
+  }, [selectedClientId]);
+
+  const loadClients = async () => {
+    setIsLoading(true);
+    const data = await getClients();
+    setClients(data);
+    if (data.length > 0) {
+      setSelectedClientId(data[0].id);
+    }
+    setIsLoading(false);
+  };
+
+  const loadDeadlines = async (clientId: string) => {
+    // TODO: Replace with real API call filtered by client
+    // For now, showing mock data
+    setDeadlines(MOCK_DEADLINES);
   };
 
   return (
@@ -34,6 +52,33 @@ export default function SecretariaPage() {
           <p className="text-gray-600">
             Extracción inteligente de plazos y fechas críticas
           </p>
+        </div>
+
+        {/* Client Selector */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-indigo-600" />
+            Seleccionar Cliente
+          </h2>
+          {isLoading ? (
+            <p className="text-gray-500">Cargando clientes...</p>
+          ) : clients.length === 0 ? (
+            <p className="text-gray-500">
+              No hay clientes.  Ve a la página de Clientes para agregar uno.
+            </p>
+          ) : (
+            <select
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target. value)}
+              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-lg"
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name} {client.company ?  `- ${client.company}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Stats Dashboard */}
@@ -64,36 +109,6 @@ export default function SecretariaPage() {
           </div>
         </div>
 
-        {/* Upload Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-indigo-600" />
-            Subir Documento para Extraer Plazos
-          </h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors">
-            <input
-              type="file"
-              id="deadline-file-upload"
-              onChange={handleFileUpload}
-              accept=".pdf,. doc,. docx,.txt,.eml"
-              className="hidden"
-              disabled={isExtracting}
-            />
-            <label
-              htmlFor="deadline-file-upload"
-              className="cursor-pointer flex flex-col items-center gap-2"
-            >
-              <Calendar className="w-12 h-12 text-gray-400" />
-              <span className="text-lg font-medium text-gray-700">
-                {isExtracting ? 'Extrayendo plazos...' : 'Click para subir documento'}
-              </span>
-              <span className="text-sm text-gray-500">
-                PDF, DOC, DOCX, TXT, EML
-              </span>
-            </label>
-          </div>
-        </div>
-
         {/* Deadlines List */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -101,9 +116,13 @@ export default function SecretariaPage() {
             Plazos Detectados ({deadlines.count})
           </h2>
           
-          {deadlines.deadlines.length === 0 ? (
+          {! selectedClientId ? (
             <p className="text-gray-500 text-center py-8">
-              No hay plazos extraídos.  Suba un documento para comenzar.
+              Seleccione un cliente para ver sus plazos. 
+            </p>
+          ) : deadlines.deadlines.length === 0 ?  (
+            <p className="text-gray-500 text-center py-8">
+              No hay plazos para este cliente.  Suba documentos en la página de Clientes. 
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
