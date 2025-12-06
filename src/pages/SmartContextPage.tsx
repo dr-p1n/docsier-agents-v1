@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Brain, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Users } from 'lucide-react';
-import { getClients } from '../services/clients';
+import { getClients, getClientAnalysis } from '../services/clients';
 import type { Client } from '../types/clients';
 import { RiskBadge } from '../components/agents';
-import { MOCK_STRATEGIC_ANALYSIS } from '../services/api';
 import type { StrategicAnalysis, AnalysisType } from '../types/agents';
 
 export default function SmartContextPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [analysis, setAnalysis] = useState<StrategicAnalysis | null>(MOCK_STRATEGIC_ANALYSIS);
+  const [analysis, setAnalysis] = useState<StrategicAnalysis | null>(null);
   const [selectedType, setSelectedType] = useState<AnalysisType>('deadline_risk');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,14 +17,36 @@ export default function SmartContextPage() {
     loadClients();
   }, []);
 
+  useEffect(() => {
+    if (selectedClientId) {
+      loadAnalysis(selectedClientId, selectedType);
+    }
+  }, [selectedClientId, selectedType]);
+
   const loadClients = async () => {
     setIsLoading(true);
-    const data = await getClients();
-    setClients(data);
-    if (data.length > 0) {
-      setSelectedClientId(data[0].id);
+    try {
+      const data = await getClients();
+      setClients(data);
+      if (data.length > 0) {
+        setSelectedClientId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading clients:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
+  };
+
+  const loadAnalysis = async (clientId: string, analysisType?: AnalysisType) => {
+    try {
+      const analyses = await getClientAnalysis(clientId, analysisType);
+      // Use the first analysis result if available
+      setAnalysis(analyses.length > 0 ? analyses[0] : null);
+    } catch (error) {
+      console.error('Error loading analysis:', error);
+      setAnalysis(null);
+    }
   };
 
   const analysisTypes: { value: AnalysisType; label: string; description: string }[] = [
@@ -47,12 +68,13 @@ export default function SmartContextPage() {
   ];
 
   const handleRunAnalysis = async () => {
+    if (!selectedClientId) return;
     setIsAnalyzing(true);
-    // Simulate API call - replace with real API call later
-    setTimeout(() => {
+    try {
+      await loadAnalysis(selectedClientId, selectedType);
+    } finally {
       setIsAnalyzing(false);
-      setAnalysis(MOCK_STRATEGIC_ANALYSIS);
-    }, 2000);
+    }
   };
 
   return (
