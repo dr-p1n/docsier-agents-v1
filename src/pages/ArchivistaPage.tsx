@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
 import { FileText, BarChart3, Users } from 'lucide-react';
 import { DocumentCard } from '../components/agents';
-import { MOCK_DOCUMENTS, MOCK_DOCUMENT_STATS } from '../services/api';
-import { getClients } from '../services/clients';
-import type { DocumentClassificationResult } from '../types/agents';
+import { getClients, getClientClassifiedDocuments, getClientDocumentStats } from '../services/clients';
+import type { DocumentClassificationResult, DocumentStats } from '../types/agents';
 import type { Client } from '../types/clients';
 
 export default function ArchivistaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [documents, setDocuments] = useState<DocumentClassificationResult[]>(MOCK_DOCUMENTS);
+  const [documents, setDocuments] = useState<DocumentClassificationResult[]>([]);
+  const [stats, setStats] = useState<DocumentStats>({
+    total: 0,
+    contract: 0,
+    invoice: 0,
+    email: 0,
+    report: 0,
+    memo: 0,
+    legal: 0,
+    other: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
-
-  const stats = MOCK_DOCUMENT_STATS;
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -35,9 +43,31 @@ export default function ArchivistaPage() {
   };
 
   const loadDocuments = async (clientId: string) => {
-    // TODO: Replace with real API call filtered by client
-    // For now, showing mock data
-    setDocuments(MOCK_DOCUMENTS);
+    setIsLoadingDocuments(true);
+    try {
+      const [documentsData, statsData] = await Promise.all([
+        getClientClassifiedDocuments(clientId),
+        getClientDocumentStats(clientId),
+      ]);
+      setDocuments(documentsData);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      // Reset to empty state on error
+      setDocuments([]);
+      setStats({
+        total: 0,
+        contract: 0,
+        invoice: 0,
+        email: 0,
+        report: 0,
+        memo: 0,
+        legal: 0,
+        other: 0,
+      });
+    } finally {
+      setIsLoadingDocuments(false);
+    }
   };
 
   return (
@@ -126,11 +156,15 @@ export default function ArchivistaPage() {
           
           {!selectedClientId ? (
             <p className="text-gray-500 text-center py-8">
-              Seleccione un cliente para ver sus documentos. 
+              Seleccione un cliente para ver sus documentos.
+            </p>
+          ) : isLoadingDocuments ? (
+            <p className="text-gray-500 text-center py-8">
+              Cargando documentos...
             </p>
           ) : documents.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
-              No hay documentos para este cliente.  Suba documentos en la página de Clientes.
+              No hay documentos para este cliente. Suba documentos en la página de Clientes.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

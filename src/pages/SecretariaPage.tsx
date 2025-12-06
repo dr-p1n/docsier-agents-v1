@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Calendar, TrendingUp, Users } from 'lucide-react';
 import { DeadlineCard } from '../components/agents';
-import { MOCK_DEADLINES, MOCK_DEADLINE_STATS } from '../services/api';
-import { getClients } from '../services/clients';
-import type { DeadlineExtractionResult } from '../types/agents';
+import { getClients, getClientDeadlines, getClientDeadlineStats } from '../services/clients';
+import type { Deadline, DeadlineStats } from '../types/agents';
 import type { Client } from '../types/clients';
 
 export default function SecretariaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [deadlines, setDeadlines] = useState<DeadlineExtractionResult>(MOCK_DEADLINES);
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [stats, setStats] = useState<DeadlineStats>({
+    total: 0,
+    overdue: 0,
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
-
-  const stats = MOCK_DEADLINE_STATS;
+  const [isLoadingDeadlines, setIsLoadingDeadlines] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -35,9 +41,29 @@ export default function SecretariaPage() {
   };
 
   const loadDeadlines = async (clientId: string) => {
-    // TODO: Replace with real API call filtered by client
-    // For now, showing mock data
-    setDeadlines(MOCK_DEADLINES);
+    setIsLoadingDeadlines(true);
+    try {
+      const [deadlinesData, statsData] = await Promise.all([
+        getClientDeadlines(clientId),
+        getClientDeadlineStats(clientId),
+      ]);
+      setDeadlines(deadlinesData);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading deadlines:', error);
+      // Reset to empty state on error
+      setDeadlines([]);
+      setStats({
+        total: 0,
+        overdue: 0,
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+      });
+    } finally {
+      setIsLoadingDeadlines(false);
+    }
   };
 
   return (
@@ -113,20 +139,24 @@ export default function SecretariaPage() {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-indigo-600" />
-            Plazos Detectados ({deadlines.count})
+            Plazos Detectados ({deadlines.length})
           </h2>
           
-          {! selectedClientId ? (
+          {!selectedClientId ? (
             <p className="text-gray-500 text-center py-8">
-              Seleccione un cliente para ver sus plazos. 
+              Seleccione un cliente para ver sus plazos.
             </p>
-          ) : deadlines.deadlines.length === 0 ?  (
+          ) : isLoadingDeadlines ? (
             <p className="text-gray-500 text-center py-8">
-              No hay plazos para este cliente.  Suba documentos en la página de Clientes. 
+              Cargando plazos...
+            </p>
+          ) : deadlines.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              No hay plazos para este cliente. Suba documentos en la página de Clientes.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deadlines.deadlines.map((deadline, idx) => (
+              {deadlines.map((deadline, idx) => (
                 <DeadlineCard key={idx} deadline={deadline} />
               ))}
             </div>
