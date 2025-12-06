@@ -11,6 +11,25 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+// Default classification for documents without classification data
+const DEFAULT_CLASSIFICATION: DocumentClassificationResult['classification'] = {
+  doc_type: 'other',
+  matter_id: null,
+  tags: [],
+  key_entities: { people: [], organizations: [], dates: [], amounts: [] },
+  summary: '',
+  confidence: 0,
+};
+
+// Type for backend document response
+interface BackendDocument {
+  id?: string;
+  document_id?: string;
+  filename: string;
+  classification?: DocumentClassificationResult['classification'];
+  created_at?: string;
+}
+
 // ============================================================================
 // CLIENT MANAGEMENT API FUNCTIONS
 // ============================================================================
@@ -242,19 +261,11 @@ export async function getClientClassifiedDocuments(
     }
     const data = await response.json();
     // Transform backend documents to DocumentClassificationResult format
-    // The backend returns classified documents that can be mapped
-    const documents = data.documents || [];
-    return documents.map((doc: { id?: string; document_id?: string; filename: string; classification?: DocumentClassificationResult['classification']; created_at?: string }) => ({
+    const documents: BackendDocument[] = data.documents || [];
+    return documents.map((doc) => ({
       document_id: doc.id || doc.document_id,
       filename: doc.filename,
-      classification: doc.classification || {
-        doc_type: 'other',
-        matter_id: null,
-        tags: [],
-        key_entities: { people: [], organizations: [], dates: [], amounts: [] },
-        summary: '',
-        confidence: 0,
-      },
+      classification: doc.classification || DEFAULT_CLASSIFICATION,
       created_at: doc.created_at,
     }));
   } catch (error) {
