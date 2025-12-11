@@ -104,7 +104,7 @@ export default function SettingsPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Settings className="w-8 h-8 text-gray-700" />
-            <h1 className="text-4xl font-bold text-gray-900">Gestión de Clientes</h1>
+            <h1 className="text-4xl font-bold text-black">Gestión de Clientes</h1>
           </div>
           <p className="text-gray-600">
             Administre clientes y sus documentos
@@ -115,7 +115,7 @@ export default function SettingsPage() {
           {/* Clients List */}
           <div className="lg:col-span-1 bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className="text-xl font-semibold flex items-center gap-2 text-black">
                 <Users className="w-5 h-5 text-gray-700" />
                 Clientes ({clients.length})
               </h2>
@@ -128,9 +128,9 @@ export default function SettingsPage() {
             </div>
 
             {isLoading ? (
-              <p className="text-gray-500 text-center py-4">Cargando... </p>
+              <p className="text-black text-center py-4">Cargando... </p>
             ) : clients.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No hay clientes</p>
+              <p className="text-black text-center py-4">No hay clientes</p>
             ) : (
               <div className="space-y-2">
                 {clients.map((client) => (
@@ -143,11 +143,11 @@ export default function SettingsPage() {
                         : 'border-gray-200 hover:border-blue-300'
                     }`}
                   >
-                    <div className="font-semibold text-gray-900">{client.name}</div>
+                    <div className="font-semibold text-black">{client.name}</div>
                     {client.company && (
-                      <div className="text-sm text-gray-600">{client.company}</div>
+                      <div className="text-sm text-black">{client.company}</div>
                     )}
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-black mt-1">
                       {client. document_count} documentos
                     </div>
                   </button>
@@ -162,26 +162,26 @@ export default function SettingsPage() {
               <>
                 {/* Client Info */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-xl font-semibold mb-4">Información del Cliente</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-black">Información del Cliente</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm text-gray-600">Nombre</div>
-                      <div className="font-semibold">{selectedClient.name}</div>
+                      <div className="text-sm text-black">Nombre</div>
+                      <div className="font-semibold text-black">{selectedClient.name}</div>
                     </div>
                     <div>
-                      <div className="text-sm text-gray-600">Email</div>
-                      <div className="font-semibold">{selectedClient.email}</div>
+                      <div className="text-sm text-black">Email</div>
+                      <div className="font-semibold text-black">{selectedClient.email}</div>
                     </div>
                     {selectedClient.phone && (
                       <div>
-                        <div className="text-sm text-gray-600">Teléfono</div>
-                        <div className="font-semibold">{selectedClient.phone}</div>
+                        <div className="text-sm text-black">Teléfono</div>
+                        <div className="font-semibold text-black">{selectedClient.phone}</div>
                       </div>
                     )}
                     {selectedClient.company && (
                       <div>
-                        <div className="text-sm text-gray-600">Empresa</div>
-                        <div className="font-semibold">{selectedClient.company}</div>
+                        <div className="text-sm text-black">Empresa</div>
+                        <div className="font-semibold text-black">{selectedClient.company}</div>
                       </div>
                     )}
                   </div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
 
                 {/* Document Upload */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-black">
                     <Upload className="w-5 h-5 text-gray-700" />
                     Subir Documentos
                   </h2>
@@ -207,10 +207,10 @@ export default function SettingsPage() {
                       className="cursor-pointer flex flex-col items-center gap-2"
                     >
                       <Upload className="w-12 h-12 text-gray-400" />
-                      <span className="text-lg font-medium text-gray-700">
+                      <span className="text-lg font-medium text-black">
                         {isUploading ? 'Subiendo...' : 'Click para subir documento'}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-black">
                         PDF, DOC, DOCX, TXT, EML
                       </span>
                     </label>
@@ -219,12 +219,12 @@ export default function SettingsPage() {
 
                 {/* Documents List */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-black">
                     <FileText className="w-5 h-5 text-gray-700" />
                     Documentos ({clientDocuments.length})
                   </h2>
                   {clientDocuments.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
+                    <p className="text-black text-center py-8">
                       No hay documentos para este cliente
                     </p>
                   ) : (
@@ -238,15 +238,15 @@ export default function SettingsPage() {
                             <div className="flex items-start gap-3 flex-1">
                               <FileText className="w-5 h-5 text-gray-600 mt-1" />
                               <div className="flex-1">
-                                <div className="font-semibold text-gray-900">{doc.filename}</div>
-                                <div className="text-sm text-gray-600 mt-1">
+                                <div className="font-semibold text-black">{doc.filename}</div>
+                                <div className="text-sm text-black mt-1">
                                   {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at). toLocaleDateString('es-CL')}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                               {getStatusIcon(doc.processing_status)}
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-black">
                                 {getStatusText(doc.processing_status)}
                               </span>
                             </div>
@@ -260,7 +260,7 @@ export default function SettingsPage() {
             ) : (
               <div className="bg-white rounded-xl shadow-lg p-12 text-center">
                 <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">
+                <p className="text-black text-lg">
                   Seleccione un cliente para ver sus detalles y documentos
                 </p>
               </div>
@@ -274,7 +274,7 @@ export default function SettingsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Agregar Nuevo Cliente</h3>
+              <h3 className="text-xl font-semibold text-black">Agregar Nuevo Cliente</h3>
               <button
                 onClick={() => setShowAddClient(false)}
                 className="p-1 hover:bg-gray-100 rounded"
@@ -284,7 +284,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Nombre *
                 </label>
                 <input
@@ -296,7 +296,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Email *
                 </label>
                 <input
@@ -308,7 +308,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Teléfono
                 </label>
                 <input
@@ -320,7 +320,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Empresa
                 </label>
                 <input
