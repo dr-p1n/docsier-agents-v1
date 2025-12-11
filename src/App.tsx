@@ -4,6 +4,7 @@ import SecretariaPage from './pages/SecretariaPage';
 import ArchivistaPage from './pages/ArchivistaPage';
 import SmartContextPage from './pages/SmartContextPage';
 import SettingsPage from './pages/SettingsPage';
+import { Toaster } from '@/components/ui/toaster';
 
 function HomePage() {
   return (
@@ -123,6 +124,9 @@ function App() {
           <Route path="/smartcontext" element={<SmartContextPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
+        
+        {/* Toast notifications */}
+        <Toaster />
       </div>
     </Router>
   );

@@ -51,9 +51,9 @@ export default function SmartContextPage() {
               Las 10 tareas más urgentes de todos tus clientes
             </p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+              <div key={i} className="bg-white rounded-xl shadow-lg p-4 animate-pulse">
                 <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -106,33 +106,33 @@ export default function SmartContextPage() {
             <p className="text-gray-500">No hay tareas urgentes</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {deadlines.map((deadline, index) => {
               const riskInfo = getRiskConfig(deadline.risk_level);
               return (
                 <div 
                   key={deadline.id || `deadline-${index}`}
-                  className="bg-white rounded-xl shadow-lg p-6"
+                  className="bg-white rounded-xl shadow-lg p-4"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     {/* Risk indicator dot */}
-                    <div className={`w-3 h-3 rounded-full ${riskInfo.bg} mt-1 flex-shrink-0`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${riskInfo.bg} mt-1 flex-shrink-0`} />
                     
                     <div className="flex-1 min-w-0">
                       {/* Description */}
-                      <h3 className="font-semibold text-lg mb-2 text-gray-900">
+                      <h3 className="font-semibold text-base mb-1 text-gray-900">
                         {deadline.description}
                       </h3>
                       
                       {/* Client name */}
                       {deadline.client_name && (
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-xs text-gray-600 mb-1">
                           Cliente: {deadline.client_name}
                         </p>
                       )}
                       
                       {/* Timeframe */}
-                      <div className="flex items-center gap-4 text-sm flex-wrap">
+                      <div className="flex items-center gap-3 text-xs flex-wrap">
                         <div className="flex items-center gap-2 text-gray-700">
                           <Calendar className="w-4 h-4" />
                           <span className="font-medium">{deadline.date}</span>

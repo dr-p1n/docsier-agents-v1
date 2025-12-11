@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Calendar, TrendingUp, Users } from 'lucide-react';
-import { DeadlineCard } from '../components/agents';
-import { getClients, getClientDeadlines, getClientDeadlineStats } from '../services/clients';
+import { Calendar, TrendingUp, Users, CheckCircle2, Undo2 } from 'lucide-react';
+import { getClients, getClientDeadlineStats, markDeadlineComplete, markDeadlineUncomplete } from '../services/clients';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import type { Deadline, DeadlineStats } from '../types/agents';
 import type { Client } from '../types/clients';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function SecretariaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [sortBy, setSortBy] = useState<'urgency' | 'completed'>('urgency');
+  const [activeDeadlines, setActiveDeadlines] = useState<Deadline[]>([]);
+  const [completedDeadlines, setCompletedDeadlines] = useState<Deadline[]>([]);
   const [stats, setStats] = useState<DeadlineStats>({
     total: 0,
     overdue: 0,
@@ -19,6 +26,7 @@ export default function SecretariaPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDeadlines, setIsLoadingDeadlines] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadClients();
@@ -43,16 +51,28 @@ export default function SecretariaPage() {
   const loadDeadlines = async (clientId: string) => {
     setIsLoadingDeadlines(true);
     try {
-      const [deadlinesData, statsData] = await Promise.all([
-        getClientDeadlines(clientId),
-        getClientDeadlineStats(clientId),
-      ]);
-      setDeadlines(deadlinesData);
+      // Fetch active deadlines
+      const activeResponse = await fetch(
+        `${API_BASE_URL}/api/clients/${clientId}/deadlines?completed=false`
+      );
+      const activeData = await activeResponse.json();
+      setActiveDeadlines(activeData.deadlines || []);
+      
+      // Fetch completed deadlines
+      const completedResponse = await fetch(
+        `${API_BASE_URL}/api/clients/${clientId}/deadlines?completed=true`
+      );
+      const completedData = await completedResponse.json();
+      setCompletedDeadlines(completedData.deadlines || []);
+      
+      // Fetch stats
+      const statsData = await getClientDeadlineStats(clientId);
       setStats(statsData);
     } catch (error) {
       console.error('Error loading deadlines:', error);
       // Reset to empty state on error
-      setDeadlines([]);
+      setActiveDeadlines([]);
+      setCompletedDeadlines([]);
       setStats({
         total: 0,
         overdue: 0,
@@ -63,6 +83,84 @@ export default function SecretariaPage() {
       });
     } finally {
       setIsLoadingDeadlines(false);
+    }
+  };
+
+  const handleMarkComplete = async (deadlineId: string) => {
+    if (!selectedClientId) return;
+    
+    try {
+      await markDeadlineComplete(selectedClientId, deadlineId);
+      
+      // Refresh deadlines
+      await loadDeadlines(selectedClientId);
+      
+      toast({
+        title: "Tarea completada",
+        description: "La tarea ha sido marcada como completada",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la tarea como completada",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUndoComplete = async (deadlineId: string) => {
+    if (!selectedClientId) return;
+    
+    try {
+      await markDeadlineUncomplete(selectedClientId, deadlineId);
+      
+      // Refresh deadlines
+      await loadDeadlines(selectedClientId);
+      
+      toast({
+        title: "Tarea restaurada",
+        description: "La tarea ha sido restaurada a la lista principal",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo restaurar la tarea",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getRiskBadgeColor = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'overdue':
+        return 'bg-red-500';
+      case 'critical':
+        return 'bg-orange-500';
+      case 'high':
+        return 'bg-yellow-500';
+      case 'medium':
+        return 'bg-blue-500';
+      case 'low':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const getRiskLabel = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'overdue':
+        return 'Vencido';
+      case 'critical':
+        return 'Crítico';
+      case 'high':
+        return 'Alto';
+      case 'medium':
+        return 'Medio';
+      case 'low':
+        return 'Bajo';
+      default:
+        return riskLevel;
     }
   };
 
@@ -95,8 +193,8 @@ export default function SecretariaPage() {
           ) : (
             <select
               value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target. value)}
-              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-lg"
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-lg text-black"
             >
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -137,10 +235,27 @@ export default function SecretariaPage() {
 
         {/* Deadlines List */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-600" />
-            Plazos Detectados ({deadlines.length})
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2 text-black">
+              <TrendingUp className="w-5 h-5 text-indigo-600" />
+              Plazos Detectados
+            </h2>
+            
+            {selectedClientId && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Ordenar por:</span>
+                <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'urgency' | 'completed')}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urgency">Por urgencia</SelectItem>
+                    <SelectItem value="completed">Completados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
           
           {!selectedClientId ? (
             <p className="text-gray-500 text-center py-8">
@@ -150,15 +265,84 @@ export default function SecretariaPage() {
             <p className="text-gray-500 text-center py-8">
               Cargando plazos...
             </p>
-          ) : deadlines.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No hay plazos para este cliente. Suba documentos en la página de Clientes.
-            </p>
+          ) : sortBy === 'urgency' ? (
+            activeDeadlines.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No hay plazos activos para este cliente. Suba documentos en la página de Clientes.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {activeDeadlines.map((deadline, idx) => (
+                  <div key={deadline.id || idx} className="border-2 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox for completion */}
+                      <Checkbox
+                        checked={false}
+                        onCheckedChange={() => handleMarkComplete(deadline.id || '')}
+                        className="mt-1"
+                      />
+                      
+                      {/* Risk indicator */}
+                      <div className={`w-3 h-3 rounded-full ${getRiskBadgeColor(deadline.risk_level)} mt-1 flex-shrink-0`} />
+                      
+                      {/* Deadline content */}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base mb-2">{deadline.description}</h3>
+                        <div className="flex items-center gap-3 text-sm flex-wrap">
+                          <span className="font-medium">{deadline.date}</span>
+                          <span className="text-gray-600">
+                            {deadline.working_days_remaining < 0
+                              ? `Vencido hace ${Math.abs(deadline.working_days_remaining)} días`
+                              : `${deadline.working_days_remaining} días hábiles`}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-bold text-white ${getRiskBadgeColor(deadline.risk_level)}`}>
+                            {getRiskLabel(deadline.risk_level)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deadlines.map((deadline, idx) => (
-                <DeadlineCard key={idx} deadline={deadline} />
-              ))}
+            <div className="space-y-3">
+              {completedDeadlines.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No hay tareas completadas
+                </p>
+              ) : (
+                completedDeadlines.map((deadline, idx) => (
+                  <div key={deadline.id || idx} className="border-2 rounded-lg p-4 opacity-75 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      {/* Checkmark icon */}
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                      
+                      {/* Deadline content with strikethrough */}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base line-through text-muted-foreground mb-2">
+                          {deadline.description}
+                        </h3>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                          <span>{deadline.date}</span>
+                          <span>Completado</span>
+                        </div>
+                      </div>
+                      
+                      {/* Undo button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleUndoComplete(deadline.id || '')}
+                        className="flex-shrink-0"
+                      >
+                        <Undo2 className="w-4 h-4 mr-1" />
+                        Deshacer
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

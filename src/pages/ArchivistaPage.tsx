@@ -100,7 +100,7 @@ export default function ArchivistaPage() {
             <select
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
-              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-lg"
+              className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-lg text-black"
             >
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -149,7 +149,7 @@ export default function ArchivistaPage() {
 
         {/* Documents List */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-black">
             <BarChart3 className="w-5 h-5 text-purple-600" />
             Documentos Clasificados ({documents.length})
           </h2>

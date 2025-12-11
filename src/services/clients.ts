@@ -235,6 +235,42 @@ export async function getUrgentDeadlines(limit: number = 10): Promise<Deadline[]
   }
 }
 
+export async function markDeadlineComplete(
+  clientId: string,
+  deadlineId: string
+): Promise<void> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/clients/${clientId}/deadlines/${deadlineId}/complete`,
+      { method: 'PATCH' }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to mark deadline complete: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error marking deadline complete:', error);
+    throw error;
+  }
+}
+
+export async function markDeadlineUncomplete(
+  clientId: string,
+  deadlineId: string
+): Promise<void> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/clients/${clientId}/deadlines/${deadlineId}/uncomplete`,
+      { method: 'PATCH' }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to restore deadline: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error restoring deadline:', error);
+    throw error;
+  }
+}
+
 // ============================================================================
 // ANALYSIS API FUNCTIONS
 // ============================================================================
