@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Settings, Users, Plus, Upload, FileText, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { Settings, Users, Plus, Upload, FileText, CheckCircle, Clock, AlertCircle, X, Trash2 } from 'lucide-react';
 import type { Client, ClientDocument } from '../types/clients';
-import { getClients, createClient, getClientDocuments, uploadClientDocument, formatFileSize } from '../services/clients';
+import { getClients, createClient, getClientDocuments, uploadClientDocument, deleteClientDocument, formatFileSize } from '../services/clients';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientDocuments, setClientDocuments] = useState<ClientDocument[]>([]);
@@ -69,6 +72,34 @@ export default function SettingsPage() {
     
     // Reset input
     event.target.value = '';
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!selectedClient) return;
+    
+    try {
+      await deleteClientDocument(selectedClient.id, documentId);
+      
+      // Remove document from UI immediately
+      setClientDocuments(clientDocuments.filter(doc => doc.id !== documentId));
+      
+      // Show success toast
+      toast({
+        title: "Documento eliminado",
+        description: "El documento ha sido eliminado correctamente",
+      });
+      
+      // Optionally refresh documents list to get updated count
+      await loadClientDocuments(selectedClient.id);
+      
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el documento",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusIcon = (status: ClientDocument['processing_status']) => {
@@ -232,9 +263,19 @@ export default function SettingsPage() {
                       {clientDocuments.map((doc) => (
                         <div
                           key={doc.id}
-                          className="p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                          className="relative p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
                         >
-                          <div className="flex items-start justify-between">
+                          {/* Delete button - top right corner */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          
+                          <div className="flex items-start justify-between pr-10">
                             <div className="flex items-start gap-3 flex-1">
                               <FileText className="w-5 h-5 text-gray-600 mt-1" />
                               <div className="flex-1">

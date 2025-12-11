@@ -182,6 +182,26 @@ export async function getClientDocumentStats(clientId: string): Promise<Document
   }
 }
 
+export async function deleteClientDocument(
+  clientId: string,
+  documentId: string
+): Promise<void> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/clients/${clientId}/documents/${documentId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to delete document: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    throw error;
+  }
+}
+
 // ============================================================================
 // DEADLINE API FUNCTIONS
 // ============================================================================
