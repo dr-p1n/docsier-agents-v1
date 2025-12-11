@@ -148,7 +148,7 @@ export default function SettingsPage() {
                       <div className="text-sm text-black">{client.company}</div>
                     )}
                     <div className="text-xs text-black mt-1">
-                      {client. document_count} documentos
+                      {client.document_count} documentos
                     </div>
                   </button>
                 ))}
@@ -240,7 +240,7 @@ export default function SettingsPage() {
                               <div className="flex-1">
                                 <div className="font-semibold text-black">{doc.filename}</div>
                                 <div className="text-sm text-black mt-1">
-                                  {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at). toLocaleDateString('es-CL')}
+                                  {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString('es-CL')}
                                 </div>
                               </div>
                             </div>
