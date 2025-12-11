@@ -193,7 +193,7 @@ export default function SecretariaPage() {
           ) : (
             <select
               value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target. value)}
+              onChange={(e) => setSelectedClientId(e.target.value)}
               className="w-full md:w-96 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none text-lg text-black"
             >
               {clients.map((client) => (
