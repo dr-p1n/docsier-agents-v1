@@ -7,11 +7,15 @@
 export type RiskLevel = 'overdue' | 'critical' | 'high' | 'medium' | 'low';
 
 export interface Deadline {
+  id?: string;
   date: string; // YYYY-MM-DD format
   description: string;
   working_days_remaining: number;
   risk_level: RiskLevel;
   source_id?: string;
+  client_id?: string;
+  client_name?: string;
+  client_email?: string;
 }
 
 export interface DeadlineExtractionResult {

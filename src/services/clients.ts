@@ -221,6 +221,20 @@ export async function getClientDeadlineStats(clientId: string): Promise<Deadline
   }
 }
 
+export async function getUrgentDeadlines(limit: number = 10): Promise<Deadline[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/urgent-deadlines?limit=${limit}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch urgent deadlines: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.deadlines || [];
+  } catch (error) {
+    console.error('Error fetching urgent deadlines:', error);
+    throw error;
+  }
+}
+
 // ============================================================================
 // ANALYSIS API FUNCTIONS
 // ============================================================================
