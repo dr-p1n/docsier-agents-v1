@@ -91,9 +91,9 @@ export default function ArchivistaPage() {
             Seleccionar Cliente
           </h2>
           {isLoading ?  (
-            <p className="text-gray-500">Cargando clientes...</p>
+            <p className="text-black">Cargando clientes...</p>
           ) : clients.length === 0 ? (
-            <p className="text-gray-500">
+            <p className="text-black">
               No hay clientes. Ve a la página de Clientes para agregar uno.
             </p>
           ) : (
@@ -169,7 +169,7 @@ export default function ArchivistaPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {documents.map((doc) => (
-                <DocumentCard key={doc. document_id} document={doc} />
+                <DocumentCard key={doc.document_id} document={doc} />
               ))}
             </div>
           )}
