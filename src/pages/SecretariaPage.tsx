@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Calendar, TrendingUp, Users, CheckCircle2, Undo2 } from 'lucide-react';
-import { getClients, getClientDeadlineStats, markDeadlineComplete, markDeadlineUncomplete } from '../services/clients';
+import { getClients, getClientDeadlineStats, markDeadlineComplete, markDeadlineUncomplete, API_BASE_URL } from '../services/clients';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import type { Deadline, DeadlineStats } from '../types/agents';
+import { ValidationIndicator } from '@/components/agents';
+import type { DeadlineStats } from '../types/agents';
 import type { Client } from '../types/clients';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import type { DeadlineWithValidation } from '@/types/validation';
 
 export default function SecretariaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [sortBy, setSortBy] = useState<'urgency' | 'completed'>('urgency');
-  const [activeDeadlines, setActiveDeadlines] = useState<Deadline[]>([]);
-  const [completedDeadlines, setCompletedDeadlines] = useState<Deadline[]>([]);
+  const [activeDeadlines, setActiveDeadlines] = useState<DeadlineWithValidation[]>([]);
+  const [completedDeadlines, setCompletedDeadlines] = useState<DeadlineWithValidation[]>([]);
   const [stats, setStats] = useState<DeadlineStats>({
     total: 0,
     overdue: 0,
@@ -56,14 +56,44 @@ export default function SecretariaPage() {
         `${API_BASE_URL}/api/clients/${clientId}/deadlines?completed=false`
       );
       const activeData = await activeResponse.json();
-      setActiveDeadlines(activeData.deadlines || []);
+      
+      // Fetch validations for active deadlines
+      const activeWithValidation = await Promise.all(
+        (activeData.deadlines || []).map(async (deadline: DeadlineWithValidation) => {
+          try {
+            const validationRes = await fetch(
+              `${API_BASE_URL}/api/validations/deadlines/${deadline.id}`
+            );
+            const validation = await validationRes.json();
+            return { ...deadline, validation };
+          } catch (error) {
+            console.warn(`Could not fetch validation for deadline ${deadline.id}:`, error);
+            return deadline;
+          }
+        })
+      );
+      setActiveDeadlines(activeWithValidation);
       
       // Fetch completed deadlines
       const completedResponse = await fetch(
         `${API_BASE_URL}/api/clients/${clientId}/deadlines?completed=true`
       );
       const completedData = await completedResponse.json();
-      setCompletedDeadlines(completedData.deadlines || []);
+      
+      const completedWithValidation = await Promise.all(
+        (completedData.deadlines || []).map(async (deadline: DeadlineWithValidation) => {
+          try {
+            const validationRes = await fetch(
+              `${API_BASE_URL}/api/validations/deadlines/${deadline.id}`
+            );
+            const validation = await validationRes.json();
+            return { ...deadline, validation };
+          } catch (error) {
+            return deadline;
+          }
+        })
+      );
+      setCompletedDeadlines(completedWithValidation);
       
       // Fetch stats
       const statsData = await getClientDeadlineStats(clientId);
@@ -299,6 +329,9 @@ export default function SecretariaPage() {
                             {getRiskLabel(deadline.risk_level)}
                           </span>
                         </div>
+                        {deadline.validation && (
+                          <ValidationIndicator validation={deadline.validation} compact />
+                        )}
                       </div>
                     </div>
                   </div>

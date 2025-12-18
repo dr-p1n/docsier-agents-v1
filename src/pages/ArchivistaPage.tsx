@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { FileText, BarChart3, Users } from 'lucide-react';
-import { DocumentCard } from '../components/agents';
-import { getClients, getClientClassifiedDocuments, getClientDocumentStats } from '../services/clients';
-import type { DocumentClassificationResult, DocumentStats } from '../types/agents';
+import { DocumentCard, ValidationIndicator } from '../components/agents';
+import { getClients, getClientClassifiedDocuments, getClientDocumentStats, API_BASE_URL } from '../services/clients';
+import type { DocumentStats } from '../types/agents';
 import type { Client } from '../types/clients';
+import type { DocumentWithValidation } from '@/types/validation';
 
 export default function ArchivistaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [documents, setDocuments] = useState<DocumentClassificationResult[]>([]);
+  const [documents, setDocuments] = useState<DocumentWithValidation[]>([]);
   const [stats, setStats] = useState<DocumentStats>({
     total: 0,
     contract: 0,
@@ -49,7 +50,24 @@ export default function ArchivistaPage() {
         getClientClassifiedDocuments(clientId),
         getClientDocumentStats(clientId),
       ]);
-      setDocuments(documentsData);
+      
+      // Fetch validations for each document
+      const documentsWithValidation = await Promise.all(
+        documentsData.map(async (doc) => {
+          try {
+            const validationRes = await fetch(
+              `${API_BASE_URL}/api/validations/classification/${doc.document_id}`
+            );
+            const validation = await validationRes.json();
+            return { ...doc, validation };
+          } catch (error) {
+            console.warn(`Could not fetch validation for document ${doc.document_id}:`, error);
+            return doc;
+          }
+        })
+      );
+      
+      setDocuments(documentsWithValidation);
       setStats(statsData);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -169,7 +187,12 @@ export default function ArchivistaPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {documents.map((doc) => (
-                <DocumentCard key={doc.document_id} document={doc} />
+                <div key={doc.document_id}>
+                  <DocumentCard document={doc} />
+                  {doc.validation && (
+                    <ValidationIndicator validation={doc.validation} compact />
+                  )}
+                </div>
               ))}
             </div>
           )}

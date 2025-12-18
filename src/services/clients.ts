@@ -11,6 +11,8 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
+export { API_BASE_URL };
+
 // Default classification for documents without classification data
 const DEFAULT_CLASSIFICATION: DocumentClassificationResult['classification'] = {
   doc_type: 'other',
