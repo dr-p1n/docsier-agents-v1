@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, Users, Plus, Upload, FileText, CheckCircle, Clock, AlertCircle, X, Trash2 } from 'lucide-react';
 import type { Client, ClientDocument } from '../types/clients';
-import { getClients, createClient, getClientDocuments, uploadClientDocument, deleteClientDocument, formatFileSize } from '../services/clients';
+import { getClients, createClient, getClientDocuments, uploadClientDocument, deleteClientDocument, formatFileSize, API_BASE_URL } from '../services/clients';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +20,8 @@ export default function SettingsPage() {
     company: '',
     active: true,
   });
+  const [clientToDelete, setClientToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -99,6 +101,60 @@ export default function SettingsPage() {
     }
   };
 
+  const handleDeleteClient = (clientId: string, clientName: string) => {
+    setClientToDelete({ id: clientId, name: clientName });
+  };
+
+  const confirmDeleteClient = async () => {
+    if (!clientToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      // Call permanent delete endpoint
+      const response = await fetch(
+        `${API_BASE_URL}/api/clients/${clientToDelete.id}/permanent`,
+        { method: 'DELETE' }
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || 'Error al eliminar cliente');
+      }
+      
+      const result = await response.json();
+      
+      // Show success toast
+      toast({
+        title: "Cliente eliminado",
+        description: `Cliente "${clientToDelete.name}" y todos sus datos han sido eliminados permanentemente`,
+      });
+      
+      // If deleted client was selected, clear selection
+      if (selectedClient?.id === clientToDelete.id) {
+        setSelectedClient(null);
+        setClientDocuments([]);
+      }
+      
+      // Refresh clients list
+      await loadClients();
+      
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo eliminar el cliente",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setClientToDelete(null);
+    }
+  };
+
+  const cancelDeleteClient = () => {
+    setClientToDelete(null);
+  };
+
   const getStatusIcon = (status: ClientDocument['processing_status']) => {
     switch (status) {
       case 'completed':
@@ -162,23 +218,41 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-2">
                 {clients.map((client) => (
-                  <button
-                    key={client. id}
-                    onClick={() => setSelectedClient(client)}
-                    className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  <div
+                    key={client.id}
+                    className={`p-4 rounded-lg border-2 transition-all ${
                       selectedClient?.id === client.id
-                        ?  'border-blue-500 bg-blue-50'
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-blue-300'
                     }`}
                   >
-                    <div className="font-semibold text-black">{client.name}</div>
-                    {client.company && (
-                      <div className="text-sm text-black">{client.company}</div>
-                    )}
-                    <div className="text-xs text-black mt-1">
-                      {client.document_count} documentos
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => {
+                          setSelectedClient(client);
+                        }}
+                      >
+                        <div className="font-semibold text-black">{client.name}</div>
+                        {client.company && (
+                          <div className="text-sm text-black">{client.company}</div>
+                        )}
+                        <div className="text-xs text-black mt-1">
+                          {client.document_count} documentos
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClient(client.id, client.name);
+                        }}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                        title="Eliminar cliente permanentemente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -384,6 +458,68 @@ export default function SettingsPage() {
                   Agregar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Client Confirmation Dialog */}
+      {clientToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+              <h3 id="delete-dialog-title" className="text-lg font-semibold">Confirmar Eliminación</h3>
+            </div>
+            
+            <p className="text-gray-700 mb-4">
+              ¿Estás seguro que deseas eliminar permanentemente el cliente{' '}
+              <strong>"{clientToDelete.name}"</strong>?
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
+              <p className="text-sm text-red-800">
+                <strong>⚠️ Advertencia:</strong> Esta acción NO se puede deshacer. 
+                Se eliminarán permanentemente:
+              </p>
+              <ul className="text-sm text-red-700 mt-2 ml-4 list-disc">
+                <li>Todos los documentos del cliente</li>
+                <li>Todos los plazos extraídos</li>
+                <li>Todas las validaciones</li>
+                <li>Todos los archivos locales</li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelDeleteClient}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteClient}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <Clock className="w-4 h-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar Permanentemente
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
