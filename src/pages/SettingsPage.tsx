@@ -466,10 +466,15 @@ export default function SettingsPage() {
       {/* Delete Client Confirmation Dialog */}
       {clientToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+          >
             <div className="flex items-center gap-3 mb-4">
               <AlertCircle className="w-6 h-6 text-red-500" />
-              <h3 className="text-lg font-semibold">Confirmar Eliminación</h3>
+              <h3 id="delete-dialog-title" className="text-lg font-semibold">Confirmar Eliminación</h3>
             </div>
             
             <p className="text-gray-700 mb-4">
