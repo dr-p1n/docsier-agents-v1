@@ -231,7 +231,6 @@ export default function SettingsPage() {
                         className="flex-1 cursor-pointer"
                         onClick={() => {
                           setSelectedClient(client);
-                          loadClientDocuments(client.id);
                         }}
                       >
                         <div className="font-semibold text-black">{client.name}</div>
