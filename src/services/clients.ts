@@ -28,8 +28,20 @@ interface BackendDocument {
   id?: string;
   document_id?: string;
   filename: string;
+  doc_type?: string;
+  client_id?: string;
   classification?: DocumentClassificationResult['classification'];
   created_at?: string;
+}
+
+// Type for validation response
+interface DocumentValidation {
+  confidence_score: number;
+  validation_status: string;
+  feedback: string;
+  verified_items?: unknown[];
+  discrepancies?: unknown[];
+  missing_information?: unknown[];
 }
 
 // ============================================================================
@@ -129,8 +141,30 @@ export async function getClientDocuments(clientId: string): Promise<ClientDocume
       throw new Error(`Failed to fetch documents: ${response.status}`);
     }
     const data = await response.json();
-    // Backend returns { client_id, count, documents } - extract documents array
-    return data.documents || [];
+    
+    // Backend returns documents with UUID 'id' and TEXT 'document_id'
+    // Frontend needs 'id' to be the document_id (filename) for deletion to work
+    const backendDocs: BackendDocument[] = data.documents || [];
+    
+    return backendDocs.map((doc) => {
+      // Backend should always provide document_id (filename)
+      // If neither exists, this is a backend data issue
+      const documentId = doc.document_id || doc.id;
+      if (!documentId) {
+        console.error('Backend document missing both document_id and id:', doc);
+      }
+      
+      return {
+        id: documentId || `unknown-${Date.now()}`,  // Use document_id (filename) as primary ID for deletion
+        client_id: doc.client_id || clientId,
+        filename: doc.filename || doc.document_id || 'unknown-file',
+        file_type: doc.doc_type || 'unknown',
+        file_size: 0,  // Not provided by backend
+        uploaded_at: doc.created_at || new Date().toISOString(),
+        processed: true,
+        processing_status: 'completed' as const,
+      };
+    });
   } catch (error) {
     console.error('Error fetching client documents:', error);
     throw error;
@@ -205,6 +239,42 @@ export async function deleteClientDocument(
   } catch (error) {
     console.error('Error deleting document:', error);
     throw error;
+  }
+}
+
+/**
+ * Get validation data for a document
+ * @param documentId - The document ID (filename)
+ * @returns Validation data including confidence score and status
+ */
+export async function getDocumentValidation(documentId: string): Promise<DocumentValidation> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/validations/classification/${documentId}`
+    );
+    
+    if (!response.ok) {
+      // Return default pending validation if not found
+      return {
+        confidence_score: 0.0,
+        validation_status: 'pending',
+        feedback: 'Validation not available'
+      };
+    }
+    
+    const data = await response.json();
+    return data.validation || {
+      confidence_score: 0.0,
+      validation_status: 'pending',
+      feedback: 'Validation not available'
+    };
+  } catch (error) {
+    console.error('Error fetching validation:', error);
+    return {
+      confidence_score: 0.0,
+      validation_status: 'pending',
+      feedback: 'Error fetching validation'
+    };
   }
 }
 
