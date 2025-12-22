@@ -58,7 +58,7 @@ export function ValidationIndicator({ validation, compact = false }: ValidationI
       >
         <Icon className={`w-4 h-4 ${config.color}`} />
         <span className={`text-xs font-medium ${config.color}`}>
-          {Math.round((validation?.confidence_score ?? 0) * 100)}% Verificado
+          {Math.round(validation.confidence_score * 100)}% Verificado
         </span>
         {!compact && (
           <span className="ml-auto">
