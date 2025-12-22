@@ -62,14 +62,18 @@ export default function SecretariaPage() {
         (activeData.deadlines || []).map(async (deadline: DeadlineWithValidation) => {
           try {
             const validationRes = await fetch(
-              `${API_BASE_URL}/api/validations/deadlines/${deadline.id}`
+              `${API_BASE_URL}/api/validations/deadline/${deadline.id}`
             );
-            const validation = await validationRes.json();
-            return { ...deadline, validation };
+            if (validationRes.ok) {
+              const validationData = await validationRes.json();
+              // Extract the nested validation object
+              return { ...deadline, validation: validationData.validation };
+            }
           } catch (error) {
             console.warn(`Could not fetch validation for deadline ${deadline.id}:`, error);
-            return deadline;
           }
+          // Return deadline with null validation if fetch failed
+          return { ...deadline, validation: null };
         })
       );
       setActiveDeadlines(activeWithValidation);
@@ -84,14 +88,18 @@ export default function SecretariaPage() {
         (completedData.deadlines || []).map(async (deadline: DeadlineWithValidation) => {
           try {
             const validationRes = await fetch(
-              `${API_BASE_URL}/api/validations/deadlines/${deadline.id}`
+              `${API_BASE_URL}/api/validations/deadline/${deadline.id}`
             );
-            const validation = await validationRes.json();
-            return { ...deadline, validation };
+            if (validationRes.ok) {
+              const validationData = await validationRes.json();
+              // Extract the nested validation object
+              return { ...deadline, validation: validationData.validation };
+            }
           } catch (error) {
             console.warn(`Could not fetch validation for deadline ${deadline.id}:`, error);
-            return deadline;
           }
+          // Return deadline with null validation if fetch failed
+          return { ...deadline, validation: null };
         })
       );
       setCompletedDeadlines(completedWithValidation);

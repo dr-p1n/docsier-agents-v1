@@ -3,12 +3,24 @@ import { useState } from 'react';
 import type { ValidationResult } from '@/types/validation';
 
 interface ValidationIndicatorProps {
-  validation: ValidationResult;
+  validation: ValidationResult | null | undefined;
   compact?: boolean;
 }
 
 export function ValidationIndicator({ validation, compact = false }: ValidationIndicatorProps) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Add safety check for validation object
+  if (!validation) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 mt-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-gray-400" />
+          <span className="text-xs text-gray-500">Validación no disponible</span>
+        </div>
+      </div>
+    );
+  }
   
   const statusConfig = {
     validated: { 
@@ -46,7 +58,7 @@ export function ValidationIndicator({ validation, compact = false }: ValidationI
       >
         <Icon className={`w-4 h-4 ${config.color}`} />
         <span className={`text-xs font-medium ${config.color}`}>
-          {Math.round(validation.confidence_score * 100)}% Verificado
+          {Math.round((validation?.confidence_score ?? 0) * 100)}% Verificado
         </span>
         {!compact && (
           <span className="ml-auto">

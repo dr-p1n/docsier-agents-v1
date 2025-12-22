@@ -58,12 +58,16 @@ export default function ArchivistaPage() {
             const validationRes = await fetch(
               `${API_BASE_URL}/api/validations/classification/${doc.document_id}`
             );
-            const validation = await validationRes.json();
-            return { ...doc, validation };
+            if (validationRes.ok) {
+              const validationData = await validationRes.json();
+              // Extract the nested validation object
+              return { ...doc, validation: validationData.validation };
+            }
           } catch (error) {
             console.warn(`Could not fetch validation for document ${doc.document_id}:`, error);
-            return doc;
           }
+          // Return document with null validation if fetch failed
+          return { ...doc, validation: null };
         })
       );
       
