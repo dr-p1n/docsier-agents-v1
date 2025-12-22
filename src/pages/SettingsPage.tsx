@@ -1,9 +1,96 @@
 import { useState, useEffect } from 'react';
 import { Settings, Users, Plus, Upload, FileText, CheckCircle, Clock, AlertCircle, X, Trash2 } from 'lucide-react';
 import type { Client, ClientDocument } from '../types/clients';
-import { getClients, createClient, getClientDocuments, uploadClientDocument, deleteClientDocument, formatFileSize, API_BASE_URL } from '../services/clients';
+import { getClients, createClient, getClientDocuments, uploadClientDocument, deleteClientDocument, getDocumentValidation, formatFileSize, API_BASE_URL } from '../services/clients';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+
+// Component for displaying a document with validation data
+function DocumentItem({ 
+  doc, 
+  onDelete 
+}: { 
+  doc: ClientDocument; 
+  onDelete: (id: string) => void;
+}) {
+  const [validation, setValidation] = useState<{
+    confidence_score: number;
+    validation_status: string;
+    feedback: string;
+  } | null>(null);
+
+  useEffect(() => {
+    getDocumentValidation(doc.id).then(setValidation);
+  }, [doc.id]);
+
+  const getStatusIcon = (status: ClientDocument['processing_status']) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'processing':
+        return <Clock className="w-4 h-4 text-blue-600 animate-spin" />;
+      case 'failed':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusText = (status: ClientDocument['processing_status']) => {
+    switch (status) {
+      case 'completed':
+        return 'Procesado';
+      case 'processing':
+        return 'Procesando...';
+      case 'failed':
+        return 'Error';
+      default:
+        return 'Pendiente';
+    }
+  };
+
+  return (
+    <div className="relative p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+      {/* Delete button - top right corner */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-2 right-2 h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+        onClick={() => onDelete(doc.id)}
+        aria-label="Eliminar documento"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+      
+      <div className="flex items-start justify-between pr-10">
+        <div className="flex items-start gap-3 flex-1">
+          <FileText className="w-5 h-5 text-gray-600 mt-1" />
+          <div className="flex-1">
+            <div className="font-semibold text-black">{doc.filename}</div>
+            <div className="text-sm text-black mt-1">
+              {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString('es-CL')}
+            </div>
+            {/* Validation display */}
+            {validation && validation.confidence_score > 0 && (
+              <div className="flex items-center gap-2 mt-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-gray-700">
+                  Validación: {Math.round(validation.confidence_score * 100)}% verificado
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {getStatusIcon(doc.processing_status)}
+          <span className="text-sm text-black">
+            {getStatusText(doc.processing_status)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -153,32 +240,6 @@ export default function SettingsPage() {
 
   const cancelDeleteClient = () => {
     setClientToDelete(null);
-  };
-
-  const getStatusIcon = (status: ClientDocument['processing_status']) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'processing':
-        return <Clock className="w-4 h-4 text-blue-600 animate-spin" />;
-      case 'failed':
-        return <AlertCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const getStatusText = (status: ClientDocument['processing_status']) => {
-    switch (status) {
-      case 'completed':
-        return 'Procesado';
-      case 'processing':
-        return 'Procesando... ';
-      case 'failed':
-        return 'Error';
-      default:
-        return 'Pendiente';
-    }
   };
 
   return (
@@ -332,39 +393,11 @@ export default function SettingsPage() {
                   ) : (
                     <div className="space-y-2">
                       {clientDocuments.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="relative p-4 border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                        >
-                          {/* Delete button - top right corner */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            aria-label="Eliminar documento"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          
-                          <div className="flex items-start justify-between pr-10">
-                            <div className="flex items-start gap-3 flex-1">
-                              <FileText className="w-5 h-5 text-gray-600 mt-1" />
-                              <div className="flex-1">
-                                <div className="font-semibold text-black">{doc.filename}</div>
-                                <div className="text-sm text-black mt-1">
-                                  {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString('es-CL')}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(doc.processing_status)}
-                              <span className="text-sm text-black">
-                                {getStatusText(doc.processing_status)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        <DocumentItem 
+                          key={doc.id} 
+                          doc={doc} 
+                          onDelete={handleDeleteDocument}
+                        />
                       ))}
                     </div>
                   )}
