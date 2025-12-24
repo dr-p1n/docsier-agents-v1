@@ -27,7 +27,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           <p className="text-sm text-gray-600">
             Si no se redirige automáticamente,{' '}
             <a 
-              href={import.meta.env.VITE_WEBSITE_URL || 'https://dd2f4d43-5c4d-402a-a30c-8f27c20f8f3f.lovableproject.com'} 
+              href={import.meta.env.VITE_WEBSITE_URL || 'https://0498855a-55c7-4994-b872-d69718b4f3ca.lovableproject.com'} 
               className="text-indigo-600 underline"
             >
               haz clic aquí
