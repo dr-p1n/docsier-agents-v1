@@ -19,7 +19,7 @@ export default function SmartContextPage() {
       const data = await getUrgentDeadlines(10);
       setDeadlines(data);
     } catch (err) {
-      setError('Error al cargar tareas urgentes');
+      setError('Error al cargar documentos pendientes');
       console.error(err);
     } finally {
       setLoading(false);
@@ -45,10 +45,10 @@ export default function SmartContextPage() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Brain className="w-8 h-8 text-green-600" />
-              <h1 className="text-4xl font-bold text-gray-900">Tareas Urgentes</h1>
+              <h1 className="text-4xl font-bold text-gray-900">Documentos Pendientes</h1>
             </div>
             <p className="text-gray-600">
-              Las 10 tareas más urgentes de todos tus clientes
+              Relaciones de documentos y procesos pendientes entre y de clientes
             </p>
           </div>
           <div className="space-y-3">
@@ -72,10 +72,10 @@ export default function SmartContextPage() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Brain className="w-8 h-8 text-green-600" />
-              <h1 className="text-4xl font-bold text-gray-900">Tareas Urgentes</h1>
+              <h1 className="text-4xl font-bold text-gray-900">Documentos Pendientes</h1>
             </div>
             <p className="text-gray-600">
-              Las 10 tareas más urgentes de todos tus clientes
+              Relaciones de documentos y procesos pendientes entre y de clientes
             </p>
           </div>
           <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
@@ -93,17 +93,17 @@ export default function SmartContextPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Brain className="w-8 h-8 text-green-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Tareas Urgentes</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Documentos Pendientes</h1>
           </div>
           <p className="text-gray-600">
-            Las 10 tareas más urgentes de todos tus clientes
+            Relaciones de documentos y procesos pendientes entre y de clientes
           </p>
         </div>
 
         {/* Deadlines List */}
         {deadlines.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No hay tareas urgentes</p>
+            <p className="text-gray-500">No hay documentos pendientes</p>
           </div>
         ) : (
           <div className="space-y-3">

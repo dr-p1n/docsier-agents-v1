@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Calendar, FileText, Brain, Home, Settings, LogOut } from 'lucide-react';
+import { Calendar, FileText, Brain, Home, User, LogOut } from 'lucide-react';
 import SecretariaPage from './pages/SecretariaPage';
 import ArchivistaPage from './pages/ArchivistaPage';
 import SmartContextPage from './pages/SmartContextPage';
@@ -99,27 +99,27 @@ function Navigation() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition-colors"
             >
               <Calendar className="w-5 h-5" />
-              Secretaria
+              Deadlines
             </Link>
             <Link
               to="/archivista"
               className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition-colors"
             >
               <FileText className="w-5 h-5" />
-              Archivista
+              Gestión de Documentos
             </Link>
             <Link
               to="/smartcontext"
               className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-green-50 text-gray-700 hover:text-green-600 transition-colors"
             >
               <Brain className="w-5 h-5" />
-              SmartContext
+              Contexto Inteligente
             </Link>
             <Link
               to="/settings"
               className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
             >
-              <Settings className="w-5 h-5" />
+              <User className="w-5 h-5" />
               Clientes
             </Link>
             <button

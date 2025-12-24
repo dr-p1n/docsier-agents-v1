@@ -99,7 +99,7 @@ export default function ArchivistaPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <FileText className="w-8 h-8 text-purple-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Agente Archivista</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Agente de Documentación y Procesos</h1>
           </div>
           <p className="text-gray-600">
             Clasificación automática de documentos con extracción de entidades

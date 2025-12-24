@@ -210,7 +210,7 @@ export default function SecretariaPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Calendar className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Agente Secretaria</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Agente de Reportes Automáticos & Fechas Límite</h1>
           </div>
           <p className="text-gray-600">
             Extracción inteligente de plazos y fechas críticas
